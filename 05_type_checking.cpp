@@ -2,32 +2,36 @@
 #include <string>
 using namespace std;
 
-// ========== BASE CLASS ==========
+// ========== БАЗОВЫЙ КЛАСС ==========
 class Base {
 public:
-    // Method returning class name
+    // Метод, возвращающий имя класса
     virtual string classname() {
         return "Base";
     }
     
-    // Method checking if object belongs to class
+    // Метод, проверяющий принадлежность объекта к классу
     virtual bool isA(string name) {
         return name == "Base";
     }
     
+    // Виртуальный деструктор
     virtual ~Base() {
         cout << "Base::~Base()" << endl;
     }
 };
 
-// ========== DERIVED CLASS ==========
+// ========== КЛАСС-ПОТОМОК ==========
 class Desc : public Base {
 public:
+    // Переопределяем метод classname()
     string classname() override {
         return "Desc";
     }
     
+    // Переопределяем метод isA() - учитываем иерархию
     bool isA(string name) override {
+        // Проверяем, является ли объект Desc или любым предком
         return (name == "Desc") || Base::isA(name);
     }
     
@@ -35,18 +39,21 @@ public:
         cout << "Desc::~Desc()" << endl;
     }
     
+    // Метод, который есть только у Desc (не в Base)
     void onlyDescMethod() {
-        cout << "This method exists only in Desc" << endl;
+        cout << "Этот метод существует только в Desc" << endl;
     }
 };
 
-// ========== GRANDCHILD CLASS ==========
+// ========== КЛАСС-ВНУК ==========
 class GrandChild : public Desc {
 public:
+    // Переопределяем classname() для внука
     string classname() override {
         return "GrandChild";
     }
     
+    // Переопределяем isA() - проверяем все уровни иерархии
     bool isA(string name) override {
         return (name == "GrandChild") || Desc::isA(name);
     }
@@ -57,63 +64,65 @@ public:
 };
 
 int main() {
-    cout << "========== PROGRAM 5: TYPE CHECKING ==========\n\n";
+    cout << "========== ПРОГРАММА 5: ПРОВЕРКА ТИПА ==========\n\n";
     
-    Base* ptr1 = new Base();
-    Base* ptr2 = new Desc();
-    Base* ptr3 = new GrandChild();
+    // Создаём объекты разных типов
+    Base* ptr1 = new Base();        // указатель на Base
+    Base* ptr2 = new Desc();        // указатель на Base, но объект Desc
+    Base* ptr3 = new GrandChild();  // указатель на Base, но объект GrandChild
     
-    cout << "--- classname() method ---\n";
-    cout << "ptr1: " << ptr1->classname() << endl;
-    cout << "ptr2: " << ptr2->classname() << endl;
-    cout << "ptr3: " << ptr3->classname() << endl;
+    cout << "--- Метод classname() ---\n";
+    cout << "ptr1: " << ptr1->classname() << endl;  // "Base"
+    cout << "ptr2: " << ptr2->classname() << endl;  // "Desc"
+    cout << "ptr3: " << ptr3->classname() << endl;  // "GrandChild"
     
-    cout << "\n--- isA() method ---\n";
-    cout << "ptr1 is Base? " << ptr1->isA("Base") << endl;
-    cout << "ptr2 is Base? " << ptr2->isA("Base") << endl;
-    cout << "ptr2 is Desc? " << ptr2->isA("Desc") << endl;
-    cout << "ptr3 is Base? " << ptr3->isA("Base") << endl;
-    cout << "ptr3 is Desc? " << ptr3->isA("Desc") << endl;
-    cout << "ptr3 is GrandChild? " << ptr3->isA("GrandChild") << endl;
+    cout << "\n--- Метод isA() ---\n";
+    cout << "ptr1 is Base? " << ptr1->isA("Base") << endl;           // true
+    cout << "ptr2 is Base? " << ptr2->isA("Base") << endl;           // true
+    cout << "ptr2 is Desc? " << ptr2->isA("Desc") << endl;           // true
+    cout << "ptr3 is Base? " << ptr3->isA("Base") << endl;           // true
+    cout << "ptr3 is Desc? " << ptr3->isA("Desc") << endl;           // true
+    cout << "ptr3 is GrandChild? " << ptr3->isA("GrandChild") << endl; // true
     
-    cout << "\n--- dynamic_cast (safe casting) ---\n";
+    cout << "\n--- dynamic_cast (безопасное приведение типов) ---\n";
     
-    // Try to cast Base* to Desc*
+    // Пытаемся привести Base* к Desc*
     Desc* d1 = dynamic_cast<Desc*>(ptr1);
     if (d1) {
-        cout << "ptr1 can be cast to Desc" << endl;
+        cout << "ptr1 можно привести к Desc" << endl;
         d1->onlyDescMethod();
     } else {
-        cout << "ptr1 CANNOT be cast to Desc" << endl;
+        cout << "ptr1 НЕЛЬЗЯ привести к Desc" << endl;  // ← этот сработает
     }
     
     Desc* d2 = dynamic_cast<Desc*>(ptr2);
     if (d2) {
-        cout << "ptr2 can be cast to Desc" << endl;
+        cout << "ptr2 можно привести к Desc" << endl;    // ← этот сработает
         d2->onlyDescMethod();
     } else {
-        cout << "ptr2 CANNOT be cast to Desc" << endl;
+        cout << "ptr2 НЕЛЬЗЯ привести к Desc" << endl;
     }
     
     Desc* d3 = dynamic_cast<Desc*>(ptr3);
     if (d3) {
-        cout << "ptr3 can be cast to Desc" << endl;
+        cout << "ptr3 можно привести к Desc" << endl;    // ← этот сработает
         d3->onlyDescMethod();
     } else {
-        cout << "ptr3 CANNOT be cast to Desc" << endl;
+        cout << "ptr3 НЕЛЬЗЯ привести к Desc" << endl;
     }
     
-    cout << "\n--- Cast with isA (safe) ---\n";
+    cout << "\n--- Приведение с помощью isA (безопасно) ---\n";
+    // Сначала проверяем, потом приводим (опасное приведение, но мы уже проверили)
     if (ptr2->isA("Desc")) {
-        Desc* safe = (Desc*)ptr2;  // unsafe cast, but we checked
+        Desc* safe = (Desc*)ptr2;  // опасное приведение, но безопасно, потому что проверили
         safe->onlyDescMethod();
     }
     
-    cout << "\n--- Deleting objects ---\n";
+    cout << "\n--- Удаление объектов ---\n";
     delete ptr1;
     delete ptr2;
     delete ptr3;
     
-    cout << "\n========== END OF PROGRAM ==========\n";
+    cout << "\n========== КОНЕЦ ПРОГРАММЫ ==========\n";
     return 0;
 }
