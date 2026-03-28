@@ -1,96 +1,104 @@
 #include <iostream>
-#include <memory>  // for unique_ptr, shared_ptr
+#include <memory>  // для unique_ptr, shared_ptr
 using namespace std;
 
-// ========== BASE CLASS ==========
+// ========== БАЗОВЫЙ КЛАСС ==========
 class Base {
 public:
+    // Конструктор базового класса
     Base() {
-        cout << "Base::Base() constructor" << endl;
+        cout << "Base::Base() конструктор" << endl;
     }
     
+    // Виртуальный деструктор
     virtual ~Base() {
-        cout << "Base::~Base() destructor" << endl;
+        cout << "Base::~Base() деструктор" << endl;
     }
     
+    // Виртуальный метод вывода
     virtual void print() {
         cout << "Base::print()" << endl;
     }
 };
 
-// ========== DERIVED CLASS ==========
+// ========== КЛАСС-ПОТОМОК ==========
 class Desc : public Base {
 public:
+    // Конструктор потомка
     Desc() {
-        cout << "Desc::Desc() constructor" << endl;
+        cout << "Desc::Desc() конструктор" << endl;
     }
     
+    // Деструктор потомка
     ~Desc() {
-        cout << "Desc::~Desc() destructor" << endl;
+        cout << "Desc::~Desc() деструктор" << endl;
     }
     
+    // Переопределение виртуального метода
     void print() override {
         cout << "Desc::print()" << endl;
     }
 };
 
-// ========== FUNCTIONS WITH SMART POINTERS ==========
+// ========== ФУНКЦИИ С УМНЫМИ УКАЗАТЕЛЯМИ ==========
 
-// Pass unique_ptr by reference (pass ownership)
+// Передача unique_ptr по ссылке (не передаём владение)
 void takeUniquePtr(unique_ptr<Base>& ptr) {
-    cout << "  takeUniquePtr: received unique_ptr" << endl;
+    cout << "  takeUniquePtr: получили unique_ptr" << endl;
     ptr->print();
 }
 
-// Pass shared_ptr by value (increment counter)
+// Передача shared_ptr по значению (увеличиваем счётчик ссылок)
 void takeSharedPtr(shared_ptr<Base> ptr) {
-    cout << "  takeSharedPtr: received shared_ptr, count = " 
+    cout << "  takeSharedPtr: получили shared_ptr, счётчик = " 
          << ptr.use_count() << endl;
     ptr->print();
 }
 
-// Return unique_ptr (transfer ownership)
+// Возврат unique_ptr (передача владения)
 unique_ptr<Base> returnUniquePtr() {
-    cout << "  returnUniquePtr: creating object" << endl;
-    unique_ptr<Base> ptr = make_unique<Desc>();
-    return ptr;
+    cout << "  returnUniquePtr: создаём объект" << endl;
+    unique_ptr<Base> ptr = make_unique<Desc>();  // создаём Desc через make_unique
+    return ptr;  // владение передаётся вызывающему коду
 }
 
 int main() {
-    cout << "========== PROGRAM 6: SMART POINTERS ==========\n\n";
+    cout << "========== ПРОГРАММА 6: УМНЫЕ УКАЗАТЕЛИ ==========\n\n";
     
-    cout << "--- unique_ptr (exclusive ownership) ---\n";
-    unique_ptr<Base> uptr1 = make_unique<Desc>();  // create
+    // ========== UNIQUE_PTR (эксклюзивное владение) ==========
+    cout << "--- unique_ptr (эксклюзивное владение) ---\n";
+    unique_ptr<Base> uptr1 = make_unique<Desc>();  // создаём объект Desc
     uptr1->print();
     
-    // unique_ptr cannot be copied, only moved
-    unique_ptr<Base> uptr2 = move(uptr1);  // transfer ownership
-    cout << "uptr1 is now empty: " << (uptr1 ? "not empty" : "empty") << endl;
+    // unique_ptr нельзя скопировать, только переместить
+    unique_ptr<Base> uptr2 = move(uptr1);  // передаём владение
+    cout << "uptr1 теперь пуст: " << (uptr1 ? "не пуст" : "пуст") << endl;
     uptr2->print();
     
-    cout << "\n--- Pass unique_ptr to function ---\n";
+    cout << "\n--- Передача unique_ptr в функцию ---\n";
     unique_ptr<Base> uptr3 = make_unique<Desc>();
-    takeUniquePtr(uptr3);  // pass by reference
-    uptr3->print();        // still exists
+    takeUniquePtr(uptr3);  // передаём по ссылке (владелец остаётся uptr3)
+    uptr3->print();        // объект всё ещё существует
     
-    cout << "\n--- Return unique_ptr from function ---\n";
-    unique_ptr<Base> uptr4 = returnUniquePtr();
+    cout << "\n--- Возврат unique_ptr из функции ---\n";
+    unique_ptr<Base> uptr4 = returnUniquePtr();  // получаем владение
     uptr4->print();
     
-    cout << "\n--- shared_ptr (shared ownership) ---\n";
-    shared_ptr<Base> sptr1 = make_shared<Desc>();
-    cout << "Count after creation: " << sptr1.use_count() << endl;
+    // ========== SHARED_PTR (разделяемое владение) ==========
+    cout << "\n--- shared_ptr (разделяемое владение) ---\n";
+    shared_ptr<Base> sptr1 = make_shared<Desc>();  // создаём объект
+    cout << "Счётчик после создания: " << sptr1.use_count() << endl;
     
-    shared_ptr<Base> sptr2 = sptr1;  // copy
-    cout << "Count after copy: " << sptr1.use_count() << endl;
+    shared_ptr<Base> sptr2 = sptr1;  // копируем, счётчик увеличивается
+    cout << "Счётчик после копирования: " << sptr1.use_count() << endl;
     
-    cout << "\n--- Pass shared_ptr to function ---\n";
-    takeSharedPtr(sptr1);
-    cout << "Count after function: " << sptr1.use_count() << endl;
+    cout << "\n--- Передача shared_ptr в функцию ---\n";
+    takeSharedPtr(sptr1);  // передаём по значению, счётчик увеличивается
+    cout << "Счётчик после функции: " << sptr1.use_count() << endl;
     
-    cout << "\n--- Smart pointers delete objects automatically ---\n";
-    cout << "Exiting main: objects will be destroyed automatically\n";
+    cout << "\n--- Умные указатели сами удаляют объекты ---\n";
+    cout << "Выход из main: объекты удалятся автоматически\n";
     
-    cout << "\n========== END OF PROGRAM ==========\n";
+    cout << "\n========== КОНЕЦ ПРОГРАММЫ ==========\n";
     return 0;
 }
