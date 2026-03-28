@@ -1,50 +1,54 @@
 #include <iostream>
 using namespace std;
 
-// ========== BASE CLASS ==========
+// ========== БАЗОВЫЙ КЛАСС ==========
 class Base {
 public:
+    // Конструктор базового класса
     Base() {
-        cout << "Base::Base() constructor" << endl;
+        cout << "Base::Base() конструктор" << endl;
     }
     
-    // WITHOUT virtual - derived destructor will NOT be called!
-    // WITH virtual - derived destructor WILL be called!
+    // ВИРТУАЛЬНЫЙ деструктор
+    // БЕЗ virtual - деструктор потомка НЕ вызовется!
+    // С virtual - деструктор потомка ВЫЗОВЕТСЯ!
     virtual ~Base() {
-        cout << "Base::~Base() destructor" << endl;
+        cout << "Base::~Base() деструктор" << endl;
     }
 };
 
-// ========== DERIVED CLASS ==========
+// ========== КЛАСС-ПОТОМОК ==========
 class Desc : public Base {
 private:
-    int* data;  // pointer to dynamic memory
+    int* data;  // указатель на динамическую память
 public:
+    // Конструктор потомка
     Desc() {
-        cout << "Desc::Desc() constructor" << endl;
-        data = new int(42);  // allocate memory
+        cout << "Desc::Desc() конструктор" << endl;
+        data = new int(42);  // выделяем память в куче
     }
     
+    // Деструктор потомка
     ~Desc() {
-        cout << "Desc::~Desc() destructor" << endl;
-        delete data;  // free memory
+        cout << "Desc::~Desc() деструктор" << endl;
+        delete data;  // освобождаем память
     }
 };
 
 int main() {
-    cout << "========== PROGRAM 2: VIRTUAL DESTRUCTOR ==========\n\n";
+    cout << "========== ПРОГРАММА 2: ВИРТУАЛЬНЫЙ ДЕСТРУКТОР ==========\n\n";
     
-    cout << "--- Create derived object ---\n";
-    Desc d;  // normal creation and destruction
+    cout << "--- Создаём объект потомка (обычное создание) ---\n";
+    Desc d;  // обычное создание и удаление
     
-    cout << "\n--- Create object through base class pointer ---\n";
-    Base* ptr = new Desc();  // create derived
-    delete ptr;  // delete through base pointer
+    cout << "\n--- Создаём объект через указатель на базовый класс ---\n";
+    Base* ptr = new Desc();  // создаём объект потомка
+    delete ptr;  // удаляем через указатель на базовый класс
     
-    cout << "\n--- If destructor was NOT virtual ---\n";
-    cout << "Then delete ptr would call only ~Base()\n";
-    cout << "Memory 'data' would leak!\n";
+    cout << "\n--- Если бы деструктор НЕ был виртуальным ---\n";
+    cout << "Тогда delete ptr вызвал бы только ~Base()\n";
+    cout << "Память 'data' не освободилась бы -> утечка памяти!\n";
     
-    cout << "\n========== END OF PROGRAM ==========\n";
+    cout << "\n========== КОНЕЦ ПРОГРАММЫ ==========\n";
     return 0;
 }
